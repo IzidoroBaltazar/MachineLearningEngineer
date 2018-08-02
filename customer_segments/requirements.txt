@@ -4,3 +4,4 @@ matplotlib
 scikit-learn<0.18
 jupyter
 seaborn
+scipy

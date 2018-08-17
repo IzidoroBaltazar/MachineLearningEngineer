@@ -62,12 +62,28 @@ class LearningAgent(Agent):
         # With the hand-engineered features, this learning process gets entirely negated.
 
         # Set 'state' as a tuple of relevant data for the agent
-        state = None
-
+        if waypoint == 'left':
+            if inputs['light']:
+                # state = (waypoint, inputs['light'], inputs['oncoming'], deadline)
+                state = (waypoint, inputs['light'], inputs['oncoming'])
+            else:
+                # state = (waypoint, inputs['oncoming'], inputs['right'], deadline)
+                state = (waypoint, inputs['oncoming'], inputs['right'])
+        elif waypoint == 'right':
+            # state = (waypoint, inputs['left'], deadline)
+            state = (waypoint, inputs['left'])
+        elif waypoint == 'forward':
+            if inputs['light']:
+                # state = (waypoint, inputs['light'], deadline)
+                state = (waypoint, inputs['light'])
+            else:
+                # state = (waypoint, inputs['left'], inputs['right'], deadline)
+                state = (waypoint, inputs['left'], inputs['right'])
+        # state = (waypoint, inputs, deadline)
         return state
 
 
-    def get_maxQ(self, state):
+    def get_maxQ(self, state, actions):
         """ The get_maxQ function is called when the agent is asked to find the
             maximum Q-value of all actions based on the 'state' the smartcab is in. """
 
@@ -76,7 +92,12 @@ class LearningAgent(Agent):
         ###########
         # Calculate the maximum Q-value of all actions for a given state
 
-        maxQ = None
+        maxQ = random.choice(actions)
+        mx = 0
+        for k, v in self.Q[state].iteritems():
+            if k in actions and v > mx:
+                mx = v
+                maxQ = k
 
         return maxQ
 
@@ -90,6 +111,8 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
+        if state not in self.Q:
+            self.Q[state] = {}
 
         return
 
@@ -101,7 +124,10 @@ class LearningAgent(Agent):
         # Set the agent state and default action
         self.state = state
         self.next_waypoint = self.planner.next_waypoint()
-        action = random.choice(self.valid_actions)
+        if self.learning and random.uniform(0, 1) > self.epsilon:
+            action = self.get_maxQ(state, self.valid_actions)
+        else:
+            action = random.choice(self.valid_actions)
 
         ###########
         ## TO DO ##
@@ -124,6 +150,11 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
 
+        # self.createQ(state, action)
+        if action not in self.Q[state]:
+            self.Q[state][action] = 0
+        self.Q[state][action] += self.alpha*reward
+
         return
 
 
@@ -132,6 +163,7 @@ class LearningAgent(Agent):
             environment for a given trial. This function will build the agent
             state, choose an action, receive a reward, and learn if enabled. """
 
+        self.epsilon -= 0.05
         state = self.build_state()          # Get current state
         self.createQ(state)                 # Create 'state' in Q-table
         action = self.choose_action(state)  # Choose an action
@@ -159,7 +191,7 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent, epsilon=10, alpha=0.8, learning=False)
+    agent = env.create_agent(LearningAgent, learning=True)
 
     ##############
     # Follow the driving agent
@@ -174,7 +206,7 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False)
+    sim = Simulator(env, update_delay=0.0001, log_metrics=True, display=False)
 
     ##############
     # Run the simulator

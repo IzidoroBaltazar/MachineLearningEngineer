@@ -1,0 +1,64 @@
+/-----------------------------------------
+| State-action rewards from Q-Learning
+\-----------------------------------------
+
+('right', 'forward')
+ -- forward : -59.00
+ -- right : -8.60
+ -- None : -5.83
+ -- left : -57.70
+
+('forward', 'red')
+ -- None : 90.66
+ -- left : -5.45
+
+('right', 'right')
+ -- right : 8.47
+ -- None : -2.84
+
+('right', None)
+ -- forward : -3.60
+ -- right : 49.56
+ -- None : -1.71
+ -- left : -9.98
+
+('left', 'red', 'right')
+ -- None : 3.36
+ -- left : -19.70
+
+('left', 'red', 'forward')
+ -- forward : -54.10
+ -- None : 9.95
+ -- left : -19.67
+
+('left', 'green', 'forward')
+ -- forward : 3.25
+
+('right', 'left')
+ -- forward : -19.87
+ -- right : 9.90
+ -- None : -0.86
+ -- left : -10.19
+
+('left', 'red', 'left')
+ -- None : 31.11
+
+('left', 'green', 'right')
+ -- forward : 0.24
+
+('left', 'green', 'left')
+ -- forward : 7.49
+
+('left', 'green', None)
+ -- right : 10.74
+
+('left', 'red', None)
+ -- forward : -19.99
+ -- None : 36.73
+ -- left : -20.02
+
+('forward', 'green')
+ -- forward : 96.53
+ -- None : -2.92
+ -- left : 0.66
+

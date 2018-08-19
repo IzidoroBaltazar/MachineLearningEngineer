@@ -63,29 +63,31 @@ class LearningAgent(Agent):
         # With the hand-engineered features, this learning process gets entirely negated.
 
         # Set 'state' as a tuple of relevant data for the agent
-        if waypoint == 'left':
-            if inputs['light']:
-                # state = (waypoint, inputs['light'], inputs['oncoming'], deadline)
-                state = (waypoint, inputs['light'], inputs['oncoming'], inputs['left'])
+        print('inputs', inputs)
+        if waypoint == 'right':
+            if inputs['light'] == 'green':
+                state = (waypoint, )
+            elif inputs['left'] == 'forward':
+                state = (waypoint, inputs['left'])
             else:
-                # state = (waypoint, inputs['oncoming'], inputs['right'], deadline)
-                state = (waypoint, inputs['oncoming'], inputs['right'], inputs['left'])
-        elif waypoint == 'right':
-            # state = (waypoint, inputs['left'], deadline)
-            state = (waypoint, inputs['left'], inputs['right'])
-        elif waypoint == 'forward':
-            if inputs['light']:
-                # state = (waypoint, inputs['light'], deadline)
-                state = (waypoint, inputs['light'], inputs['oncoming'])
-            else:
-                # state = (waypoint, inputs['left'], inputs['right'], deadline)
-                state = (waypoint, inputs['left'], inputs['right'], inputs['oncoming'])
-        # state = (waypoint, inputs, deadline)
-        print(inputs, waypoint, state)
+                state = (waypoint,)
+        elif waypoint == 'left':
+            if inputs['light'] == 'red':
+                state = (inputs['light'])
+            elif inputs['light'] == 'green':
+                if inputs['oncoming'] in ['forward', 'right']:
+                    state = (waypoint, inputs['oncoming'])
+                else:
+                    state = (waypoint, )
+        else:
+            if inputs['light'] == 'red':
+                state = (inputs['light'])
+            elif inputs['light'] == 'green':
+                state = (waypoint, )
         return state
 
 
-    def get_maxQ(self, state, actions):
+    def get_maxQ(self, state):
         """ The get_maxQ function is called when the agent is asked to find the
             maximum Q-value of all actions based on the 'state' the smartcab is in. """
 
@@ -94,16 +96,16 @@ class LearningAgent(Agent):
         ###########
         # Calculate the maximum Q-value of all actions for a given state
 
-        maxQ = random.choice(actions)
-        mx = -1000
-        visited = self.Q[state]
-        for a in actions:
-            if a not in visited:
-                self.Q[state][a] = 0
+        maxQ = None
+        mx = None
         for k, v in self.Q[state].iteritems():
-            if v > mx:
+            print(k, v)
+            if v >= mx:
+                # print(k, v, mx, maxQ, 'Hoooooray!!!!!!')
                 mx = v
                 maxQ = k
+
+        # if maxQ != None:
 
         return maxQ
 
@@ -117,8 +119,12 @@ class LearningAgent(Agent):
         # When learning, check if the 'state' is not in the Q-table
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
+        # print self.Q, state
         if state not in self.Q:
+            # print "Creating"
             self.Q[state] = {}
+            for action in [None, 'forward', 'left', 'right']:
+                self.Q[state][action] = 0
 
         return
 
@@ -130,8 +136,11 @@ class LearningAgent(Agent):
         # Set the agent state and default action
         self.state = state
         self.next_waypoint = self.planner.next_waypoint()
+        # if self.epsilon > 0.1 and [(k, v) for (k, v) in self.Q[state].iteritems() if v > 0]:
+        #     k, v = [(k, v) for (k, v) in self.Q[state].iteritems() if v > 0][0]
+        #     action = k
         if self.learning and random.uniform(0, 1) > self.epsilon:
-            action = self.get_maxQ(state, self.valid_actions)
+            action = self.get_maxQ(state)
         else:
             action = random.choice(self.valid_actions)
 
@@ -155,10 +164,17 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
+        deadline = self.env.get_deadline(self)  # Remaining deadline
+        if deadline == 0:
+            return
 
-        # self.createQ(state, action)
-        if action not in self.Q[state]:
-            self.Q[state][action] = 0
+        # self.createQ(state)
+        # print(self.Q[state], 'state', action, 'action')
+        # print(self.Q, 'whole Q')
+        # if action not in self.Q[state]:
+        #     # print('was there?', self.Q[state])
+        #     self.Q[state][action] = 0
+        # if abs(self.Q[state][action]) < 5:
         self.Q[state][action] += self.alpha*reward
 
         return
@@ -170,9 +186,9 @@ class LearningAgent(Agent):
             state, choose an action, receive a reward, and learn if enabled. """
 
         # self.epsilon = (1/(self.t**2))
-        self.epsilon = math.exp(-self.t*0.25)
+        self.epsilon = math.exp(-self.t*0.01)
         self.t += 1
-        # self.alpha = (1/(self.t**2))
+        self.alpha = 0.5*math.exp(-self.t*0.005)
         state = self.build_state()          # Get current state
         self.createQ(state)                 # Create 'state' in Q-table
         action = self.choose_action(state)  # Choose an action
@@ -200,7 +216,7 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent, learning=True, alpha=0.6)
+    agent = env.create_agent(LearningAgent, learning=True, alpha=1)
 
     ##############
     # Follow the driving agent

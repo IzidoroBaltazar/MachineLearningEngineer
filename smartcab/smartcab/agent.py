@@ -101,11 +101,8 @@ class LearningAgent(Agent):
         for k, v in self.Q[state].iteritems():
             print(k, v)
             if v >= mx:
-                # print(k, v, mx, maxQ, 'Hoooooray!!!!!!')
                 mx = v
                 maxQ = k
-
-        # if maxQ != None:
 
         return maxQ
 
@@ -136,9 +133,6 @@ class LearningAgent(Agent):
         # Set the agent state and default action
         self.state = state
         self.next_waypoint = self.planner.next_waypoint()
-        # if self.epsilon > 0.1 and [(k, v) for (k, v) in self.Q[state].iteritems() if v > 0]:
-        #     k, v = [(k, v) for (k, v) in self.Q[state].iteritems() if v > 0][0]
-        #     action = k
         if self.learning and random.uniform(0, 1) > self.epsilon:
             action = self.get_maxQ(state)
         else:
@@ -165,16 +159,6 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
         deadline = self.env.get_deadline(self)  # Remaining deadline
-        if deadline == 0:
-            return
-
-        # self.createQ(state)
-        # print(self.Q[state], 'state', action, 'action')
-        # print(self.Q, 'whole Q')
-        # if action not in self.Q[state]:
-        #     # print('was there?', self.Q[state])
-        #     self.Q[state][action] = 0
-        # if abs(self.Q[state][action]) < 5:
         self.Q[state][action] += self.alpha*reward
 
         return

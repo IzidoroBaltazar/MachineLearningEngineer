@@ -41,6 +41,11 @@ class LearningAgent(Agent):
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
 
+        if not testing:
+            self.epsilon = math.exp(-self.t*0.0005)
+            self.t += 1
+            self.alpha = 0.6*math.exp(-self.t*0.0001)
+
         return None
 
     def build_state(self):
@@ -157,10 +162,6 @@ class LearningAgent(Agent):
             environment for a given trial. This function will build the agent
             state, choose an action, receive a reward, and learn if enabled. """
 
-        # self.epsilon = (1/(self.t**2))
-        self.epsilon = math.exp(-self.t*0.0005)
-        self.t += 1
-        self.alpha = 0.6*math.exp(-self.t*0.0001)
         state = self.build_state()          # Get current state
         self.createQ(state)                 # Create 'state' in Q-table
         action = self.choose_action(state)  # Choose an action

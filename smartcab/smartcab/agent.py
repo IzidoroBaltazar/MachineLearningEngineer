@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """
 
-    def __init__(self, env, learning=False, epsilon=1.0, alpha=0.5):
+    def __init__(self, env, learning=False, epsilon=1.0, alpha=0.2):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment
         self.t = 1.0
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
@@ -41,6 +41,12 @@ class LearningAgent(Agent):
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
 
+        if not testing:
+            # self.epsilon -= 0.05
+            self.epsilon = math.exp(-self.t*0.0005)
+            self.alpha = 0.6*math.exp(-self.t*0.0001)
+            self.t += 1
+
         return None
 
     def build_state(self):
@@ -63,27 +69,8 @@ class LearningAgent(Agent):
         # With the hand-engineered features, this learning process gets entirely negated.
 
         # Set 'state' as a tuple of relevant data for the agent
-        print('inputs', inputs)
-        if waypoint == 'right':
-            if inputs['light'] == 'green':
-                state = (waypoint, )
-            elif inputs['left'] == 'forward':
-                state = (waypoint, inputs['left'])
-            else:
-                state = (waypoint,)
-        elif waypoint == 'left':
-            if inputs['light'] == 'red':
-                state = (inputs['light'])
-            elif inputs['light'] == 'green':
-                if inputs['oncoming'] in ['forward', 'right']:
-                    state = (waypoint, inputs['oncoming'])
-                else:
-                    state = (waypoint, )
-        else:
-            if inputs['light'] == 'red':
-                state = (inputs['light'])
-            elif inputs['light'] == 'green':
-                state = (waypoint, )
+        print('inputs', inputs, deadline)
+        state = (waypoint, inputs['light'], inputs['left'], inputs['oncoming'])
         return state
 
 
@@ -98,16 +85,17 @@ class LearningAgent(Agent):
 
         maxQ = None
         mx = None
+        mxLst = []
         for k, v in self.Q[state].iteritems():
             print(k, v)
-            if v >= mx:
-                # print(k, v, mx, maxQ, 'Hoooooray!!!!!!')
+            if v > mx:
                 mx = v
                 maxQ = k
+                mxLst = [maxQ]
+            elif v == mx:
+                mxLst.append(k)
 
-        # if maxQ != None:
-
-        return maxQ
+        return random.choice(mxLst)
 
 
     def createQ(self, state):
@@ -120,11 +108,12 @@ class LearningAgent(Agent):
         # If it is not, create a new dictionary for that state
         #   Then, for each action available, set the initial Q-value to 0.0
         # print self.Q, state
-        if state not in self.Q:
-            # print "Creating"
-            self.Q[state] = {}
-            for action in [None, 'forward', 'left', 'right']:
-                self.Q[state][action] = 0
+        if self.learning:
+            if state not in self.Q:
+                # print "Creating"
+                self.Q[state] = {}
+                for action in [None, 'forward', 'left', 'right']:
+                    self.Q[state][action] = 0
 
         return
 
@@ -136,9 +125,6 @@ class LearningAgent(Agent):
         # Set the agent state and default action
         self.state = state
         self.next_waypoint = self.planner.next_waypoint()
-        # if self.epsilon > 0.1 and [(k, v) for (k, v) in self.Q[state].iteritems() if v > 0]:
-        #     k, v = [(k, v) for (k, v) in self.Q[state].iteritems() if v > 0][0]
-        #     action = k
         if self.learning and random.uniform(0, 1) > self.epsilon:
             action = self.get_maxQ(state)
         else:
@@ -164,18 +150,10 @@ class LearningAgent(Agent):
         ###########
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
-        deadline = self.env.get_deadline(self)  # Remaining deadline
-        if deadline == 0:
-            return
-
-        # self.createQ(state)
-        # print(self.Q[state], 'state', action, 'action')
-        # print(self.Q, 'whole Q')
-        # if action not in self.Q[state]:
-        #     # print('was there?', self.Q[state])
-        #     self.Q[state][action] = 0
-        # if abs(self.Q[state][action]) < 5:
-        self.Q[state][action] += self.alpha*reward
+        if self.learning:
+            deadline = self.env.get_deadline(self)  # Remaining deadline
+            print('deadline', deadline, 'reward', reward)
+            self.Q[state][action] = self.Q[state][action]*(1 - self.alpha) + self.alpha*reward
 
         return
 
@@ -185,10 +163,6 @@ class LearningAgent(Agent):
             environment for a given trial. This function will build the agent
             state, choose an action, receive a reward, and learn if enabled. """
 
-        # self.epsilon = (1/(self.t**2))
-        self.epsilon = math.exp(-self.t*0.01)
-        self.t += 1
-        self.alpha = 0.5*math.exp(-self.t*0.005)
         state = self.build_state()          # Get current state
         self.createQ(state)                 # Create 'state' in Q-table
         action = self.choose_action(state)  # Choose an action
@@ -216,7 +190,7 @@ def run():
     #   learning   - set to True to force the driving agent to use Q-learning
     #    * epsilon - continuous value for the exploration factor, default is 1
     #    * alpha   - continuous value for the learning rate, default is 0.5
-    agent = env.create_agent(LearningAgent, learning=True, alpha=1)
+    agent = env.create_agent(LearningAgent, learning=True, alpha=0.6)
 
     ##############
     # Follow the driving agent
@@ -238,7 +212,7 @@ def run():
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=40, tolerance=0.01)
+    sim.run(n_test=10, tolerance=0.01)
 
 
 if __name__ == '__main__':

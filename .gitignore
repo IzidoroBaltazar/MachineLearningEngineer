@@ -2,3 +2,8 @@
 */__pycache__
 *.DS_Store
 *.pyc
+dog-project/dogImages/*
+dog-project/bottleneck_features/DogVGG16Data.npz
+dog-project/lfw/*
+dog-project/saved_models/weights.best.from_scratch.hdf5
+dog-project/saved_models/weights.best.vgg16.hdf5

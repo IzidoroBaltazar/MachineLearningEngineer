@@ -7,3 +7,6 @@ dog-project/bottleneck_features/DogVGG16Data.npz
 dog-project/lfw/*
 dog-project/saved_models/weights.best.from_scratch.hdf5
 dog-project/saved_models/weights.best.vgg16.hdf5
+dog-project/bottleneck_features/DogXceptionData.npz
+dog-project/saved_models/weights.best.VGG16.hdf5
+dog-project/saved_models/weights.best.Xception.hdf5

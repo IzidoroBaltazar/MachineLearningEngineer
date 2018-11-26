@@ -2,6 +2,13 @@
 */__pycache__
 *.DS_Store
 *.pyc
+
+*.log
+*.aux
+*.spl
+*.bbl
+*.blg
+
 dog-project/dogImages/*
 dog-project/lfw/*
 dog-project/saved_models/weights.best.from_scratch.hdf5

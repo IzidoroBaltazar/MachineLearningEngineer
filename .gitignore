@@ -8,6 +8,7 @@
 *.spl
 *.bbl
 *.blg
+*.out
 
 dog-project/dogImages/*
 dog-project/lfw/*

@@ -76,10 +76,18 @@ Machine Learning \sep{Trading} \sep{Udacity} \sep{Nanodegree}
 
 In this project we will investigate futures trading on Chicago Mercantile Exchange (CME) markets with Machine Learning methods. The goal is to find the trading strategy mostly based on the price, Commitment of Traders report (COT) and seasonality pattern. We will compare this trading strategy to commonly used investing approaches as returns of Dow Jones Industrial Average or Bonds.
 
+Example of Machine Learning used in futures algorithmic trading.
+\begin{itemize}
+    \item \href{http://cs229.stanford.edu/proj2014/David\%20Montague,\%20Algorithmic\%20Trading\%20of\%20Futures\%20via\%20Machine\%20Learning.pdf}{Algorithmic Trading of Futures via Machine Learning}
+    \item \href{https://towardsdatascience.com/https-medium-com-skuttruf-machine-learning-in-finance-algorithmic-trading-on-energy-markets-cb68f747147}{A Machine Learning framework for Algorithmic trading on Energy markets}
+\end{itemize}
+
 \section{Datasets and Inputs}
 %% \label{S:1}
 
 I will use free data from \href{https://www.quandl.com/}{Quandl}. 
+
+Data range will be from 1st of Januray 2000. Until current trading day. On average trading year has 252 trading days. This gives us about about 4500 ($252*18 = 4536$) data points over past approximately 18 years.
 
 I will retrieve data through Quandl API and then save resulting dataframe as CSV file.
 This way it will be possible to run project without the need to call Quandl APIs.

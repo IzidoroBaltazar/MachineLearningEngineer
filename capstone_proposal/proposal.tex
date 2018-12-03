@@ -125,7 +125,11 @@ I plan to use following libraries/frameworks.
 
 Main goal is to create trading strategy.
 
-Output of model will be classification of input (two years, 2*252=504 vectors) as trade (long/short position) or do not trade.
+Input will have approximately following shape:
+\[ 2 years data \]
+\[ 2*252 trading days = 504 \]
+\[ 504 * 7 (number of features in a day) = 3024 features\]
+Output of model will be classification of input. (two years, 2*252 days = 504 days * number of values  vector) as trade (long/short position) or do not trade.
 
 \section{Benchmark Model}
 

@@ -10,6 +10,7 @@
 %% \documentclass[final,5p,times,twocolumn]{elsarticle}
 
 \usepackage{amssymb}
+\usepackage{amsmath}
 %% The amsthm package provides extended theorem environments
 %% \usepackage{amsthm}
 
@@ -94,7 +95,7 @@ Example of Machine Learning used in futures algorithmic trading.
 
 I will use free data from \href{https://www.quandl.com/}{Quandl}. 
 
-Data range will be from 1st of Januray 2000. Until current trading day. On average trading year has 252 trading days. This gives us about about 4500 ($252*18 = 4536$) data points over past approximately 18 years.
+Data range will be from 1st of January 2000. Until current trading day. On average trading year has 252 trading days. This gives us about about 4500 ($252*18 = 4536$) data points (these are composed of multiple values OHLC, COT, date, volume\ldots) over past approximately 18 years.
 
 I will retrieve data through Quandl API and then save resulting dataframe as CSV file.
 This way it will be possible to run project without the need to call Quandl APIs.
@@ -123,13 +124,40 @@ I plan to use following libraries/frameworks.
 
 \section{Solution Statement}
 
-Main goal is to create trading strategy.
+Main goal is to create trading strategy. I will follow classification approach.
 
 Input will have approximately following shape:
-\[ 2 years data \]
-\[ 2*252 trading days = 504 \]
-\[ 504 * 7 (number of features in a day) = 3024 features\]
-Output of model will be classification of input. (two years, 2*252 days = 504 days * number of values  vector) as trade (long/short position) or do not trade.
+\[2 \textup{ years data}\]
+\[2*252 \textup{ trading days} = 504\textup{ trading days}\]
+\[504\textup{ trading days} * 7 \textup{ (number of features in a day)} = 3528 \textup{ features}\]
+
+Labels will be generated as,
+% \[
+% \begin{align}
+\begin{gather}
+    fee = 1.5 \\
+    t_{treshold} = 30 \\
+    v_{volatility} = (\textup{close} - \textup{open})*\delta \textup{ where } \delta \approx 0.95 \\
+    %\textup{label} = 
+    labels
+    \begin{cases}
+        | v_{volatility} | > t_{treshold} + fee \implies
+        \begin{cases}
+            v_{volatility} > 0 \implies 1 \textup{ (long)} \\
+            v_{volatility} < 0 \implies -1 \textup{ (short)} \\
+        \end{cases}\\
+        | v_{volatility} | < t_{treshold} + fee \implies 0 \textup{ (no trade)}
+    \end{cases}
+% \end{align}
+\end{gather}
+% \]
+$\delta$ constant is used for simulating slippage.
+$1.5$ that we are subtracting is a trading fee.
+We can see in the label function if volatility is too close to $0$ it will be rounded to $0$ --- meaning don't trade.
+
+Output of model will be classification of input into three categories trade (long/short position) or do not trade.
+
+If we will look into longer trading than one day. Labels can be constructed in the similar way as above. But we will have to consider stop-loss value. We might have to end the trade sooner than we wanted.
 
 \section{Benchmark Model}
 

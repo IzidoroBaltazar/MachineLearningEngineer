@@ -4,4 +4,6 @@ matplotlib
 holidays
 lightgbm
 xgboost
+keras
+keras_metrics
 jupyter

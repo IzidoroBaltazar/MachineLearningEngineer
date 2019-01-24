@@ -8,3 +8,4 @@ xgboost
 keras
 keras_metrics
 jupyter
+# pip install http://h2o-release.s3.amazonaws.com/h2o/rel-xu/2/Python/h2o-3.22.1.2-py2.py3-none-any.whl

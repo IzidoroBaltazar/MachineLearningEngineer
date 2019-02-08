@@ -102,8 +102,39 @@ General trading idea is to keep trade for a day.
 \caption{Gains distribution}
 \end{figure}
 
+\subsection{Label Generation for classifier}
 Labels were generated based on the trading target.
 Target -1 is for short trade. 0 for no trade and 1 for long trade.
+
+Threshold was chosen for different commodities differently based on the overall gains of the next day taking into account whole contract.
+
+\begin{center}
+\begin{tabular}{cc}
+    \centering
+    Commodity & Threshold (USD) \\
+    \hline
+    Gold & 500 \\
+    Corn & 150 \\
+    Coffee & 375 \\
+\end{tabular}
+\end{center}
+
+\begin{gather}
+    fee = 1.5 \\
+    % t_{treshold} = 30 \\
+    v_{volatility} = (\textup{close} - \textup{open})*\delta \textup{ where } \delta = 0.95 \\
+    labels
+    \begin{cases}
+        | v_{volatility} | > t_{treshold} + fee \implies
+        \begin{cases}
+            v_{volatility} > 0 \implies 1 \textup{ (long)} \\
+            v_{volatility} < 0 \implies -1 \textup{ (short)} \\
+        \end{cases}\\
+        | v_{volatility} | < t_{treshold} + fee \implies 0 \textup{ (no trade)}
+    \end{cases}
+\end{gather}
+$\delta$ constant is used for simulating slippage.
+
 \begin{figure}[h!]
 \centering
 \begin{tabular}{ccc}
@@ -190,8 +221,106 @@ Based on the PCA variance graph I think that PCA transformation is not suitable 
     \caption{PCA explained variance}
 \end{figure}
 
-\subsection{Project Design}
+\subsection{Outliers}
+We checked dataset for outliers. I used IsolationForest from scikit with automatic outlier detection after PCA transformation.
+Data was split into 3 sets training, validation and perfomance check.
+Training set contains more that $1930$ samples. On this training set outlier detection was trained.
+Following number of outliers were detected.
 
+\begin{center}
+\begin{tabular}{ccc}
+    Commodity & Number of Inliers & Number of Outliers \\
+    \hline
+    Gold & 1927 & 6 \\
+    Corn & 1915 & 15 \\
+    Coffee & 1577 & 346 \\
+\end{tabular}
+\end{center}
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{ccc}
+\subfloat[Gold]{\includegraphics[width = 1.5in]{figures/gold_outliers.eps}} &
+\subfloat[Corn]{\includegraphics[width = 1.5in]{figures/corn_outliers.eps}} &
+\subfloat[Coffee]{\includegraphics[width = 1.5in]{figures/coffee_outliers.eps}}
+\end{tabular}
+\caption{Outliers histogram}
+\end{figure}
+
+\section{Model Training}
+\subsection{General strategy for training}
+I tried the same model for all three commodities (gold, corn and coffee). I am looking for classifier with the same parameters for any commodity. This way I can be sure that I have found some general classification and good results are not just a coincidence.
+
+Following exploration can be split into:
+
+\begin{itemize}
+    \item classificator
+    \item regressor
+\end{itemize}
+
+\subsection{LightGBM Regressor}
+
+\begin{center}
+\begin{tabular}{ccc}
+    Commodity & Prediction/actual result correlation & Gains \\
+    Gold & 0.096 & 57\% \\
+    Corn & 0.03 & 2\% \\
+    Coffee & -0.031 & 34\%
+\end{tabular}
+\end{center}
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{ccc}
+\subfloat[Gold]{\includegraphics[width = 1.5in]{figures/gold_lgb_kernel_density_residuals.eps}} &
+\subfloat[Corn]{\includegraphics[width = 1.5in]{figures/corn_lgb_kernel_density_residuals.eps}} &
+\subfloat[Coffee]{\includegraphics[width = 1.5in]{figures/coffee_lgb_kernel_density_residuals.eps}}
+\end{tabular}
+\caption{Residual Errors}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{ccc}
+\subfloat[Gold]{\includegraphics[width = 1.5in]{figures/gold_lgb_actual_prediction.eps}} &
+\subfloat[Corn]{\includegraphics[width = 1.5in]{figures/corn_lgb_actual_prediction.eps}} &
+\subfloat[Coffee]{\includegraphics[width = 1.5in]{figures/coffee_lgb_actual_prediction.eps}}
+\end{tabular}
+\caption{Actual vs Prediction Scatter Plot}
+\end{figure}
+
+When determining trading performance of the LightGBM regressor I have chosen following trading thresholds.
+
+\begin{center}
+\begin{tabular}{cccc}
+    Commodity & Trading threshold & Classifier threshold & Ratio \\
+    Gold & 100 & 500 & $1\over{5}$ \\
+    \\
+    Corn & 30 & 150 & $1\over{5}$ \\
+    \\
+    Coffee & 20 & 375 & $1\over{19}$ \\
+\end{tabular}
+\end{center}
+
+This part of trading process is somewhat unknown to me. Regressor is not predicting many days with big volatility. Predictions are much flatter than the actual gains.
+For gold and corn they are close to $1\over{5}$ to the classifier thresholds. For coffee I have decreased thresholds to trigger at least some trades throughout the trading year 2018.
+
+Based on the chosen threshold you can get some idea of how well is the regressor approximating actual gains.
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{ccc}
+\subfloat[Gold]{\includegraphics[width = 1.5in]{figures/gold_lgb_trade_histogram.eps}} &
+\subfloat[Corn]{\includegraphics[width = 1.5in]{figures/corn_lgb_trade_histogram.eps}} &
+\subfloat[Coffee]{\includegraphics[width = 1.5in]{figures/coffee_lgb_trade_histogram.eps}}
+\end{tabular}
+\caption{Trade histogram}
+\end{figure}
+
+
+
+
+\iffalse
 Following schema is showing high level project pipeline.
 \newline
 
@@ -231,89 +360,7 @@ tblock/.style = {draw, trapezium, minimum height=10mm,
 \end{tikzpicture}
 \newline
 \newline
-I will look into commodities that's why I want to capture seasonality.
-I plan to use daily data, because of that my trading plan is to hold the position (either long/short) for 1--3 days or until stop loss was hit.
-
-I will investigate different features that have impact on trading.
-
-\begin{itemize}
-    \item feature engineering
-    \begin{itemize}
-        \item PCA (dimensionality of input vector is very high)
-        \item COT
-        \item price
-        \item volume
-        \item date (modify to find seasonality)
-    \end{itemize}
-    \item training
-    \begin{itemize}
-        \item Random Forest
-        \item Neural Network
-        \item XGBoost
-        \item LightGBM
-        \item \ldots
-    \end{itemize}
-\end{itemize}
-
-How will be stop-loss selected?
-\begin{itemize}
-    \item fixed
-        \begin{itemize}
-            \item try different fixed stop-loss values
-        \end{itemize}
-    \item floating
-        \begin{itemize}
-            \item based on the volatility of previous days
-        \end{itemize}
-\end{itemize}
-
-\subsection{Raw Input}
-Raw input will have approximately following shape:
-\[2 \textup{ years data}\]
-\[2*252 \textup{ trading days} = 504\textup{ trading days}\]
-\[504\textup{ trading days} * 7 \textup{ (number of features in a day)} = 3528 \textup{ features}\]
-
-\subsection{Feature Engineering}
-Reduce dimensionality:
-\begin{itemize}
-    \item PCA
-    \item accumulation
-        \begin{itemize}
-            \item trading day of month
-            \item average
-            \item try different min/max of last trading day in relationship to 2years of data
-            \item \ldots
-        \end{itemize}
-\end{itemize}
-
-\subsection{Label Generation}
-Labels will be generated as,
-% \[
-% \begin{align}
-\begin{gather}
-    fee = 1.5 \\
-    t_{treshold} = 30 \\
-    v_{volatility} = (\textup{close} - \textup{open})*\delta \textup{ where } \delta \approx 0.95 \\
-    %\textup{label} = 
-    labels
-    \begin{cases}
-        | v_{volatility} | > t_{treshold} + fee \implies
-        \begin{cases}
-            v_{volatility} > 0 \implies 1 \textup{ (long)} \\
-            v_{volatility} < 0 \implies -1 \textup{ (short)} \\
-        \end{cases}\\
-        | v_{volatility} | < t_{treshold} + fee \implies 0 \textup{ (no trade)}
-    \end{cases}
-% \end{align}
-\end{gather}
-% \]
-$\delta$ constant is used for simulating slippage.
-$1.5$ that we are subtracting is a trading fee.
-We can see in the label function if volatility is too close to $0$ it will be rounded to $0$ --- meaning don't trade.
-
-Output of model will be classification of input into three categories trade (long/short position) or do not trade.
-
-If we will look into longer trading than one day. Labels can be constructed in the similar way as above. But we will have to consider stop-loss value. We might have to end the trade sooner than we wanted.
+\fi
 
 \section{Benchmark Model}
 

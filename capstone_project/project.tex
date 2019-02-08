@@ -317,8 +317,56 @@ Based on the chosen threshold you can get some idea of how well is the regressor
 \caption{Trade histogram}
 \end{figure}
 
+\subsection{Neural Network Classication}
 
+\subsubsection{Neural network design}
+Neural network if fully connected with input layer, 2 hidden layers and output layer consisting of 3 neurons.
+Output layer of 3 layers represent 3 categories $\{-1, 0, 1\}$.
 
+\begin{center}
+\begin{tabular}{cccccc}
+    Input & input layer & \multicolumn{2}{c}{hidden layers} & output layer & output \\
+    \hline
+    200 & 32 & 16 & 8 & 3 & 3 \\
+\end{tabular}
+\end{center}
+
+\subsubsection{Classifier Training}
+
+In the training setup I was using training data with labels described above. If validation loss improved then new weights were saved.
+Total number of epochs was $200$ and batch size $20$.
+
+Table below is showing last weight update.
+\begin{center}
+    \begin{tabular}{cc}
+        Commodity & Epoch \\
+        \hline
+        Gold & 169 \\
+        Corn & 174 \\
+        Coffee & 101 \\
+    \end{tabular}
+\end{center}
+
+\subsubsection{Cetegory precision score}
+\begin{center}
+    \begin{tabular}{cccc}
+        Commodity & Short & No trade & Long \\
+        \hline
+        Gold & 0.17 & 0.54 & 0.20 \\
+        Corn & 0.18 & 0.65 & 0.17 \\
+        Coffee & 0. & 0.33 & 0.21 \\
+    \end{tabular}
+\end{center}
+
+\begin{figure}[h!]
+\centering
+\begin{tabular}{ccc}
+\subfloat[Gold]{\includegraphics[width = 1.5in]{figures/gold_nn_cls_trade_histogram.eps}} &
+\subfloat[Corn]{\includegraphics[width = 1.5in]{figures/corn_nn_cls_trade_histogram.eps}} &
+\subfloat[Coffee]{\includegraphics[width = 1.5in]{figures/coffee_nn_cls_trade_histogram.eps}}
+\end{tabular}
+\caption{Trade histogram}
+\end{figure}
 
 \iffalse
 Following schema is showing high level project pipeline.
@@ -362,7 +410,7 @@ tblock/.style = {draw, trapezium, minimum height=10mm,
 \newline
 \fi
 
-\section{Benchmark Model}
+\section{Benchmarking Model}
 
 I will use three benchmarks for my model
 

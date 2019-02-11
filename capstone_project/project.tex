@@ -68,6 +68,7 @@ Following commodities were investigated:
 
 \section{Project Overview}
 
+\subsection{Pipeline}
 Following schema is showing high level project overview.
 \newline
 
@@ -108,6 +109,63 @@ tblock/.style = {draw, trapezium, minimum height=10mm,
 \newline
 \newline
 
+\subsection{Tools}
+Following tools were used:
+\begin{itemize}
+    \item General ML tools
+    \begin{itemize}
+        \item \href{https://scikit-learn.org/}{Scikit}
+    \end{itemize}
+    \item Visualization
+        \begin{itemize}
+            \item \href{https://matplotlib.org/}{matplotlib}
+            \item \href{https://seaborn.pydata.org/}{seaborn}
+        \end{itemize}
+    \item Model building tools
+        \begin{itemize}
+            \item \href{https://keras.io/}{Keras}
+            \item \href{https://www.tensorflow.org/}{TensorFlow (keras backend)}
+            \item \href{https://www.h2o.ai/}{H2O}
+            \item \href{https://lightgbm.readthedocs.io/}{LightGBM}
+        \end{itemize}
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+Model performance will be evaluated on the trading data from year 2018. Based on the trading signals trade will be simulated.
+Then gains/losses will be accounted.
+
+\begin{gather}
+    \delta = 0.95\\
+    fee = 1.5\\
+    account = 10000\\
+    f(model_{signal}) \implies
+    \begin{cases}
+        -1 \implies
+        \begin{cases}
+            high - open >= stop_{loss} = -stop_{loss} - fee\\
+            otherwise = (open - settle)*\delta - fee
+        \end{cases}\\
+        0 \implies 0\\
+        1 \implies
+        \begin{cases}
+            open - low >= stop_{loss} = -stop_{loss} - fee\\
+            otherwise = (settle - open)*\delta - fee
+        \end{cases}
+    \end{cases}\\
+model(inputs) = model_{signal}\\
+evaluation = account + \sum^{2018} f(model_{signal})
+\end{gather}
+
+Note: if throughout the evaluation of model trading (expression 6) we reach 0 or less we stop trading since we have no more capital.
+Minimum of evaluation is 0 or slightly negative number. Bigger the evaluation number the better model performs.
+Also note that this evaluation metrics is not directly connected to the training of the model. We are searching for
+model parameters and loss functions that will maximize this evaluation metrics.
+
+\subsection{Where is the code?}
+All the data and code that was used to generate this report can be found in the \href{https://github.com/IzidoroBaltazar/MachineLearningEngineer/blob/master/capstone\_project/trading\_project.ipynb}{\textbf{trading\_project.ipynb}} notebook.
+When training neural network with keras you can arrive at slightly different results than those in this report because of different seed.
+
+
 \section{Datasets and Inputs}
 
 We used data from \href{https://www.quandl.com/}{Quandl}. Data contains Open, High, Low, Close and volume (OHLCV) and commitment of traders (COT).
@@ -119,7 +177,7 @@ Raw gold OHLCV data example (with calculated label).
 \nopagebreak[0]
 \begin{center}
     \begin{tabular}{cccccccc}
-    Index & Open &High &Low &Settle &Volume &Prev. Day Open Interest &target\\
+    Index & Open &High &Low &Settle &Volume &Prev. Day OI &target\\
     \hline
     2006-06-13 &590.5 &595.0 &565.5 &566.8 &93899.0 &192616.0 &0.0\\
     2006-06-14 &570.0 &575.5 &565.4 &566.5 &68729.0 &192917.0 &0.0\\
@@ -129,7 +187,6 @@ Raw gold OHLCV data example (with calculated label).
     \end{tabular}
 \end{center}
 
-\clearpage
 Raw gold COT data example.
 \nopagebreak[0]
 \begin{center}
@@ -156,50 +213,25 @@ Raw gold COT data example.
 
 \begin{figure}[h!]
 \centering
-\begin{tabular}{cc}
-\subfloat[Gold]{\includegraphics[width = 2.5in]{figures/gold.eps}} &
-\subfloat[Corn]{\includegraphics[width = 2.5in]{figures/corn.eps}} \\
-\subfloat[Coffee]{\includegraphics[width = 2.5in]{figures/coffee.eps}} & \\
+\begin{tabular}{c}
+\subfloat[Gold]{\includegraphics[width = 3.5in]{figures/gold.eps}} \\
+\subfloat[Corn]{\includegraphics[width = 3.5in]{figures/corn.eps}} \\
+\subfloat[Coffee]{\includegraphics[width = 3.5in]{figures/coffee.eps}}
 \end{tabular}
 \caption{Close price graphs}
 \end{figure}
 
-\section{ML}
-\subsection{Tools}
-Following tools were used:
-\begin{itemize}
-    \item General ML tools
-    \begin{itemize}
-        \item \href{https://scikit-learn.org/}{Scikit}
-    \end{itemize}
-    \item Visualization
-        \begin{itemize}
-            \item \href{https://matplotlib.org/}{matplotlib}
-            \item \href{https://seaborn.pydata.org/}{seaborn}
-        \end{itemize}
-    \item Model building tools
-        \begin{itemize}
-            \item \href{https://keras.io/}{Keras}
-            \item \href{https://www.tensorflow.org/}{TensorFlow (keras backend)}
-            \item \href{https://www.h2o.ai/}{H2O}
-            \item \href{https://lightgbm.readthedocs.io/}{LightGBM}
-        \end{itemize}
-\end{itemize}
-
-\subsection{Where is the code?}
-All the data and code that was used to generate this report can be found in the \href{https://github.com/IzidoroBaltazar/MachineLearningEngineer/blob/master/capstone\_project/trading\_project.ipynb}{\textbf{trading\_project.ipynb}} notebook.
-When training neural network with keras you can arrive at slightly different results than those in this report because of different seed.
-
+% \section{Tools}
 \section{Data analysis}
 
 In the proposal I wanted to investigate classification of volatility. Below is 95\% of daily volatility. 95\% was selected as a simulation of slippage.
 General trading idea is to keep trade for a day.
 \begin{figure}[h!]
 \centering
-\begin{tabular}{cc}
-\subfloat[Gold]{\includegraphics[width = 2.5in]{figures/gold_gains_distribution.eps}} &
-\subfloat[Corn]{\includegraphics[width = 2.5in]{figures/corn_gains_distribution.eps}} \\
-\subfloat[Coffee]{\includegraphics[width = 2.5in]{figures/coffee_gains_distribution.eps}} &
+\begin{tabular}{c}
+\subfloat[Gold]{\includegraphics[width = 4in]{figures/gold_gains_distribution.eps}} \\
+\subfloat[Corn]{\includegraphics[width = 4in]{figures/corn_gains_distribution.eps}} \\
+\subfloat[Coffee]{\includegraphics[width = 4in]{figures/coffee_gains_distribution.eps}}
 \end{tabular}
 \caption{Gains distribution}
 \end{figure}
@@ -318,7 +350,7 @@ Possible explanations for lack of variance explanation by PCA for coffee:
 Based on the PCA variance graph I think that PCA transformation is not suitable for coffee. Information in components is growing linearly. If we don't see sharp increase of cumulative explained variance with few first components, then PCA transformation is not suitable. Therefore, coffee should not be considered for trading with PCA transformation. I will continue with coffee as well but based on this transformation I would not go ahead with trading unless I would find different transformation.
 \begin{figure}[h]
     \centering
-    \includegraphics{figures/pca.eps}
+    \includegraphics[width = 5in]{figures/pca.eps}
     \caption{PCA explained variance}
 \end{figure}
 
@@ -602,29 +634,13 @@ We used three comparisons to model performance.
 
 It is interesting to notice that mean reversal strategy works for gold and corn but does not produce gains for coffee market.
 
-\iffalse
-\begin{figure}[h!]
-\centering
-\begin{tabular}{c}
-\subfloat[Gold]{\includegraphics[width = 5in]{figures/gold_mean_reversal.eps}} \\
-\subfloat[Corn]{\includegraphics[width = 5in]{figures/corn_mean_reversal.eps}} \\
-\subfloat[Coffee]{\includegraphics[width = 5in]{figures/coffee_mean_reversal.eps}}
-\end{tabular}
-\caption{Mean Reversal}
-\end{figure}
-\fi
+\begin{center}
+\includegraphics[width = 5in]{figures/gold_benchmark_performance.eps}
+\includegraphics[width = 5in]{figures/corn_benchmark_performance.eps}
+\includegraphics[width = 5in]{figures/coffee_benchmark_performance.eps}
+\end{center}
 
-\begin{figure}[h!]
-\centering
-\begin{tabular}{c}
-\subfloat[Gold]{\includegraphics[width = 5in]{figures/gold_benchmark_performance.eps}} \\
-\subfloat[Corn]{\includegraphics[width = 5in]{figures/corn_benchmark_performance.eps}} \\
-\subfloat[Coffee]{\includegraphics[width = 5in]{figures/coffee_benchmark_performance.eps}}
-\end{tabular}
-\caption{Benchmark Performance}
-\end{figure}
-
-\clearpage
+% \clearpage
 
 \section{Conclusion}
 

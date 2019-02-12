@@ -237,6 +237,17 @@ General trading idea is to keep trade for a day.
 \end{figure}
 
 \subsection{Label Generation for classifier}
+
+First let's have a look at the volatility of different commodities. All of the data below is gathered from training set. We have put aside performance evaluation set (trading data for year 2018).
+\begin{center}
+    \begin{tabular}{ccccccccc}
+        Commodity & count & mean & std & min & 25\% & 50\% & 75\% & max \\
+        Gold & 2921 & -6.88 & 1225.72 & -11390.5 & -560.5 & 28.5 & 627.0 & 6555.0 \\
+        Corn & 2917 & 6.12 & 411.07 & -1983.13 & -190.0 & 11.88 & 213.75 & 1888.13 \\
+        Coffee & 2908 & -11.55 & 1070.46 & -5236.88 & -516.56 & 0.00 & 498.75 & 6341.25 \\
+    \end{tabular}
+\end{center}
+
 Labels were generated based on the trading target.
 Label -1 is for short trade 0 for no trade and 1 for long trade.
 
@@ -279,7 +290,7 @@ $\delta$ constant is used for simulating slippage.
 \end{figure}
 
 
-I decided to have a look at regressor as well.
+We decided to have a look at regressor as well.
 
 Based on the past 2 years of trading data (OHLCV and COT) classifier is deciding whether to trade or not.
 
@@ -382,7 +393,18 @@ Following number of outliers were detected.
 
 \clearpage
 
-\section{Model Training}
+\section{Model}
+
+\subsection{Model Selection}
+Gradient boosting on decision trees can have better performance than standard random forest.
+There can be found some reference to training models with XGB (\href{https://www.quantinsti.com/blog/forecasting-markets-using-extreme-gradient-boosting-xgboost}{\textbf{Quantisti article}}).
+In this project we will use different type of gradient boosting called LightGBM.
+Training with gradient boosting is different because next tree we construct is trying to correct for the error.
+You can read more about GBT vs Random Forest \href{https://medium.com/@aravanshad/gradient-boosting-versus-random-forest-cfa3fa8f0d80}{(\textbf{article})}.
+
+Problem of random forest (as well as gradient boosting) is that this kind of algorithm does not extrapolate well (\href{http://freerangestats.info/blog/2016/12/10/extrapolation}{\textbf{freerangestats}}).
+Neural networks does not suffer from this problem. We will try neural networks for regression.
+
 \subsection{General strategy for training}
 We tried the same model for all three commodities (gold, corn and coffee). We are looking for classifier with the same parameters for any commodity. This way we can be sure that we have found some general classification and results are not just a coincidence for a given model.
 Generally, we try to find one model that works for most markets.
@@ -435,9 +457,9 @@ We used following parameters to train LightGBM regressor.
 \begin{figure}[h!]
 \centering
 \begin{tabular}{cc}
-\subfloat[Gold]{\includegraphics[width = 1.5in]{figures/gold_lgb_kernel_density_residuals.eps}} &
-\subfloat[Corn]{\includegraphics[width = 1.5in]{figures/corn_lgb_kernel_density_residuals.eps}} \\
-\subfloat[Coffee]{\includegraphics[width = 1.5in]{figures/coffee_lgb_kernel_density_residuals.eps}} &
+\subfloat[Gold]{\includegraphics[width = 2.5in]{figures/gold_lgb_kernel_density_residuals.eps}} &
+\subfloat[Corn]{\includegraphics[width = 2.5in]{figures/corn_lgb_kernel_density_residuals.eps}} \\
+\subfloat[Coffee]{\includegraphics[width = 2.5in]{figures/coffee_lgb_kernel_density_residuals.eps}} &
 \end{tabular}
 \caption{Residual Errors on The Validation Set}
 \end{figure}
@@ -634,13 +656,108 @@ We used three comparisons to model performance.
 
 It is interesting to notice that mean reversal strategy works for gold and corn but does not produce gains for coffee market.
 
+For each commodity we have selected best model out of three trained.
+\begin{center}
+    \begin{tabular}{cc}
+        Commodity & Model \\
+        \hline
+        Gold & Neural Network Regressor\\
+        Corn & LightGBM Regressor\\
+        Coffee & LightGBM Regressor\\
+    \end{tabular}
+\end{center}
+
+We have took into consideration not only gains (even though important) but also other metrics.
+Out of three commodities gold has best correlation between predictions and actual volatility for neural networks regressor.
+
+Let's have a closer look at the first commodity.
+
+\subsection{Gold}
+
+Graph below is visualizing our neural networks regressor performance on the trading data for year 2018.
+
 \begin{center}
 \includegraphics[width = 5in]{figures/gold_benchmark_performance.eps}
+\end{center}
+
+Table below is showing finalized gains/losses for year 2018.
+
+\begin{center}
+    \begin{tabular}{cccc}
+        Strategy & Start of year 2018 & End of year 2018 & Net Gains \\
+        \hline
+        trading gold model NN & 10000 & 24000 & 14000 \\
+        trading mean reversal & 10000 & 14000 & 4000 \\
+        investing in bonds & 10000 & 10400 & 400 \\
+        investing in NASDAQ & 10000 & 9720 & -280 \\
+    \end{tabular}
+\end{center}
+
+It is important to realize that NASDAQ and bonds investment are requiring least of effort.
+These are theoretically only $2$ (maybe one trade in case of bonds) trades. We buy NASDAQ in the
+beginning of the year and sell in the end.
+
+Other strategies as trading gold model NN trading and mean reversal require much more effort. We
+need to trade periodically and make tens of trades.
+
+With each trade the risk is increasing. In case of gold our model has reached high enough performance
+to be considered for actual trading.
+
+\subsection{Corn}
+
+Graph below is visualizing our LightGBM regressor performance on the trading data for year 2018.
+
+\begin{center}
 \includegraphics[width = 5in]{figures/corn_benchmark_performance.eps}
+\end{center}
+
+Table below is showing finalized gains/losses for year 2018.
+
+\begin{center}
+    \begin{tabular}{cccc}
+        Strategy & Start of year 2018 & End of year 2018 & Net Gains \\
+        \hline
+        trading corn LGBM Regressor & 10000 & 10500 & 500 \\
+        trading mean reversal & 10000 & 11550 & 1550 \\
+        investing in bonds & 10000 & 10400 & 400 \\
+        investing in NASDAQ & 10000 & 9720 & -280 \\
+    \end{tabular}
+\end{center}
+
+From the perspective of $10000\$$ account corn seems like a good trading choice. We haven't reached
+very high returns but trading strategy turned out profitable for the year 2018. Which would be
+better than investing into NASDAQ --- which encountered decline. Mean reversal trading strategy generated
+more gains but equity curve seems very sharp.
+
+LightGBM regressor trading strategy is performing only slightly better than much safer investment
+into bonds. In the current form it might be used as a starting strategy for environment setup.
+Later on we would have to revisit the data and create better performing model.
+
+\subsection{Coffee}
+
+Graph below is visualizing our LightGBM regressor performance on the trading data for year 2018.
+
+\begin{center}
 \includegraphics[width = 5in]{figures/coffee_benchmark_performance.eps}
 \end{center}
 
-% \clearpage
+Table below is showing finalized gains/losses for year 2018.
+
+\begin{center}
+    \begin{tabular}{cccc}
+        Strategy & Start of year 2018 & End of year 2018 & Net Gains \\
+        \hline
+        trading coffee LGBM Regressor & 10000 & 16100 & 6100 \\
+        trading mean reversal & 10000 & 1900 & -8100 \\
+        investing in bonds & 10000 & 10400 & 400 \\
+        investing in NASDAQ & 10000 & 9720 & -280 \\
+    \end{tabular}
+\end{center}
+
+Coffee end of year returns seem very good for coffee. Equity curve throughout the year seems odd.
+We already mentioned that there is something strange with coffee data (see PCA explained variance and autodetected outliers).
+Looking at possible gains in coffee market it is a lucrative commodity but it seems we would have
+to rethink our approach to this market (which might help with two other commodities as well).
 
 \section{Conclusion}
 

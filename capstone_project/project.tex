@@ -335,8 +335,21 @@ I am not sure, whether this transformation grants subsequent PCA usage.
 After adding data features vector now contains $2528$ scalars.
 
 We transformed COT to reflect extreme in the index. COT 1 of industrials corresponds to the maximum of traders' positions throughout the last 2 years.
-Respectively 0 to minimum. We have included COT for commercial and industrial users from the last 8 weeks which is 16 values.
+Respectively 0 to minimum. We have included COT for commercial (Money managers) and industrial (producers) users from the last 8 weeks which is 16 values.
 Training vector now contains $2528+16=2544$ values.
+
+\subsection{COT transformation}
+
+See below sample of feature engineered COT data.
+
+\begin{center}
+    \begin{tabular}{ccc}
+ 	    Index & Prod\_net\_position\_perc & Money\_manager\_net\_position\_perc\\
+        2006-06-27 &1.000000 &0.000000\\
+        2006-07-03 &0.919154 &0.246529\\
+        2006-07-11 &0.792600 &1.000000\\
+    \end{tabular}
+\end{center}
 
 \subsection{PCA}
 We try to capture about 80\% of variance of the data. For corn this corresponds to about $160$ components. For gold it is about $180$ components.

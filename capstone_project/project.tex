@@ -238,7 +238,7 @@ General trading idea is to keep trade for a day.
 
 \subsection{Label Generation for classifier}
 
-First let's have a look at the volatility of different commodities. All of the data below is gathered from training set. We have put aside performance evaluation set (trading data for year 2018).
+First let's have a look at the volatility of different commodities. All the data below is gathered from training set. We have put aside performance evaluation set (trading data for year 2018).
 \begin{center}
     \begin{tabular}{ccccccccc}
         Commodity & count & mean & std & min & 25\% & 50\% & 75\% & max \\
@@ -330,8 +330,8 @@ Stop-loss was selected so that 90\% of trades will be successfully executed (exi
 
 We transformed last $2*252$ trading days into vector with $2520$ scalars.
 
-In order to capture cyclicality, we have transformed features as trading day of month, day of week and quarter of year into $sin$ and $cos$ values.
-I am not sure whether this transformation grants subsequent PCA usage.
+To capture cyclicality, we have transformed features as trading day of month, day of week and quarter of year into $sin$ and $cos$ values.
+I am not sure, whether this transformation grants subsequent PCA usage.
 After adding data features vector now contains $2528$ scalars.
 
 We transformed COT to reflect extreme in the index. COT 1 of industrials corresponds to the maximum of traders' positions throughout the last 2 years.
@@ -402,8 +402,8 @@ In this project we will use different type of gradient boosting called LightGBM.
 Training with gradient boosting is different because next tree we construct is trying to correct for the error.
 You can read more about GBT vs Random Forest \href{https://medium.com/@aravanshad/gradient-boosting-versus-random-forest-cfa3fa8f0d80}{(\textbf{article})}.
 
-Problem of random forest (as well as gradient boosting) is that this kind of algorithm does not extrapolate well (\href{http://freerangestats.info/blog/2016/12/10/extrapolation}{\textbf{freerangestats}}).
-Neural networks does not suffer from this problem. We will try neural networks for regression.
+Problem of random forest (as well as gradient boosting) is that this kind of algorithm does not extrapolate well (\href{http://freerangestats.info/blog/2016/12/10/extrapolation}{\textbf{freerangestats article}}).
+Neural networks do not suffer from this problem. We will try neural networks for regression.
 
 \subsection{General strategy for training}
 We tried the same model for all three commodities (gold, corn and coffee). We are looking for classifier with the same parameters for any commodity. This way we can be sure that we have found some general classification and results are not just a coincidence for a given model.
@@ -412,7 +412,7 @@ Generally, we try to find one model that works for most markets.
 Following exploration can be split into:
 
 \begin{itemize}
-    \item classificator
+    \item classifier
     \item regressor
 \end{itemize}
 
@@ -528,7 +528,7 @@ We evaluated trading performance on the year 2018. Below is account performance 
 
 \clearpage
 
-\subsection{Neural Network Classication}
+\subsection{Neural Network Classification}
 
 \subsubsection{Neural network design}
 Neural network is fully connected with input layer, 2 hidden layers and output layer consisting of 3 neurons.
@@ -667,7 +667,7 @@ For each commodity we have selected best model out of three trained.
     \end{tabular}
 \end{center}
 
-We have took into consideration not only gains (even though important) but also other metrics.
+We have taken into consideration not only gains (even though important) but also, other metrics.
 Out of three commodities gold has best correlation between predictions and actual volatility for neural networks regressor.
 
 Let's have a closer look at the first commodity.
@@ -690,6 +690,21 @@ Table below is showing finalized gains/losses for year 2018.
         trading mean reversal & 10000 & 14000 & 4000 \\
         investing in bonds & 10000 & 10400 & 400 \\
         investing in NASDAQ & 10000 & 9720 & -280 \\
+    \end{tabular}
+\end{center}
+
+
+Gold Neural Network regressor trade details for 2018.
+\begin{center}
+    \begin{tabular}{c|c}
+        Predictions/Actual volatility correlation&  0.16\\
+        Returns & 140.86 \%\\
+        Number of trades&  72\\
+        Number of short trades&  15\\
+        Number of long trades&  57\\
+        Earnings per trade&  195.65\\
+        Earnings per short trade&  205.63\\
+        Earnings per long trade&  193.02\\
     \end{tabular}
 \end{center}
 
@@ -724,6 +739,20 @@ Table below is showing finalized gains/losses for year 2018.
     \end{tabular}
 \end{center}
 
+Corn LightGBM regressor trade details for 2018.
+\begin{center}
+    \begin{tabular}{c|c}
+        Predictions/Actual volatility correlation & 0.078\\
+        Returns & 5.14 \%\\
+        Number of trades & 20\\
+        Number of short trades & 11\\
+        Number of long trades & 9\\
+        Earnings per trade & 25.70\\
+        Earnings per short trade & 44.92\\
+        Earnings per long trade & 2.21\\
+    \end{tabular}
+\end{center}
+
 From the perspective of $10000\$$ account corn seems like a good trading choice. We haven't reached
 very high returns but trading strategy turned out profitable for the year 2018. Which would be
 better than investing into NASDAQ --- which encountered decline. Mean reversal trading strategy generated
@@ -747,16 +776,30 @@ Table below is showing finalized gains/losses for year 2018.
     \begin{tabular}{cccc}
         Strategy & Start of year 2018 & End of year 2018 & Net Gains \\
         \hline
-        trading coffee LGBM Regressor & 10000 & 16100 & 6100 \\
+        trading coffee LGBM Regressor & 10000 & 16200 & 6200 \\
         trading mean reversal & 10000 & 1900 & -8100 \\
         investing in bonds & 10000 & 10400 & 400 \\
         investing in NASDAQ & 10000 & 9720 & -280 \\
     \end{tabular}
 \end{center}
 
+Coffee LightGBM regressor trade details for 2018.
+\begin{center}
+    \begin{tabular}{c|c}
+        Predictions/Actual volatility correlation&  -0.001\\
+        Returns & 62.54 \%\\
+        Number of trades&  37\\
+        Number of short trades&  24\\
+        Number of long trades&  13\\
+        Earnings per trade&  169.04\\
+        Earnings per short trade&  216.42\\
+        Earnings per long trade&  81.56\\
+    \end{tabular}
+\end{center}
+
 Coffee end of year returns seem very good for coffee. Equity curve throughout the year seems odd.
 We already mentioned that there is something strange with coffee data (see PCA explained variance and autodetected outliers).
-Looking at possible gains in coffee market it is a lucrative commodity but it seems we would have
+Looking at possible gains in coffee market it is a lucrative commodity, but it seems we would have
 to rethink our approach to this market (which might help with two other commodities as well).
 
 \section{Conclusion}
